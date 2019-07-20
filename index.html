@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="A Progressive Web App to optimize charge cycles for a healthy battery">
+    <meta name="keywords" content="PWA, Progressive Web App, Battery, Health, Offline, Optimize, Charge Cycle">
+
+    <link rel="manifest" href="manifest.json">
+
+    <meta name="theme-color" content="#242424" />
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link rel="icon" href="icon.png" sizes="256x256">
+
+    <meta name="apple-mobile-web-app-title" content="Juicy - Increase battery life!">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-startup-image" href="icon.png">
+
+    <meta name="application-name" content="Juicy">
+    <meta name="msapplication-TileImage" content="icon.png">
+    <meta name="msapplication-TileColor" content="#242424">
+    <meta name="msapplication-tooltip" content="Increase battery life!">
+    <meta name="msapplication-starturl" content="/">
+
+    <meta name="full-screen" content="yes">
+    <meta name="browsermode" content="application">
+
+    <title>Juicy - Increase battery life!</title>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif
+        }
+
+        main {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-direction: column;
+            box-sizing: border-box;
+            font-weight: bold;
+        }
+
+        #status,
+        #level {
+            font-size: 30vmin;
+        }
+
+        #nope {
+            font-size: 50vmin;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div><span id="level"></span>%</div>
+        <div id="status"></div>
+    </main>
+
+    <script>
+        if (navigator.getBattery) {
+            navigator.getBattery().then(function (battery) {
+                setupEvents()
+                updateAll()
+                notify(`I'll notify when to ${battery.charging ? "un-plug" : "plug-in"}`)
+
+                function setupEvents() {
+                    battery.addEventListener("chargingchange", updateStatus)
+                    battery.addEventListener("levelchange", updateLevel)
+                }
+
+                function updateAll() {
+                    updateStatus()
+                    updateLevel()
+                }
+
+                function updateStatus() {
+                    document.getElementById("status").textContent = battery.charging ? "🔌" : "🔋"
+                }
+
+                function updateLevel() {
+                    var level = Math.round(battery.level * 100)
+                    document.getElementById("level").textContent = level == 100 ? "💯" : `${level}`
+
+                    if (level <= 21 && !battery.charging) {
+                        notify("🔌 Plug-in now")
+                    } else if (level >= 79 && battery.charging) {
+                        notify("🔋 Un-plug now")
+                    }
+                }
+            })
+
+            function notify(msg) {
+                if (!("Notification" in window)) {
+                    alert("This browser does not support system notifications :(")
+                } else if (Notification.permission === "granted") {
+                    bang(msg)
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission(function (permission) {
+                        if (permission === "granted") {
+                            bang(msg)
+                        }
+                    })
+                }
+            }
+
+            function bang(msg) {
+                var notification = new Notification("Battery Charge", { body: msg, icon: "icon.png" })
+                setTimeout(notification.close.bind(notification), 5000)
+            }
+
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("sw.js")
+                    .then(() => console.log("✨ Service Worker Registered"))
+                    .catch(e => console.error(`😭 Service Worker not Registered due to ${JSON.stringify(e)}`))
+            }
+        } else {
+            var mainEl = document.getElementsByTagName("main")[0]
+
+            while (mainEl.firstChild) {
+                mainEl.firstChild.remove()
+            }
+
+            var nopeEl = document.createElement("div")
+            nopeEl.id = "nope"
+            nopeEl.textContent = "😭"
+
+            mainEl.appendChild(nopeEl)
+        }
+    </script>
+</body>
+
+</html>
