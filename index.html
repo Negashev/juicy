@@ -47,6 +47,7 @@
             flex-direction: column;
             box-sizing: border-box;
             font-weight: bold;
+            user-select: none;
         }
 
         #status,
@@ -92,9 +93,9 @@
                     document.getElementById("level").textContent = level == 100 ? "💯" : `${level}`
 
                     if (level <= 21 && !battery.charging) {
-                        notify("🔌 Plug-in now")
+                        notify(`🔌 Plug-in now, 🔋 at ${level}%`)
                     } else if (level >= 79 && battery.charging) {
-                        notify("🔋 Un-plug now")
+                        notify(`🔌 Un-plug now, 🔋 at ${level}%`)
                     }
                 }
             })

@@ -1,4 +1,4 @@
-const cacheName = "juicy-cache-v1.1",
+const cacheName = "juicy-cache-v1.2",
     assets = [
         "./",
         "index.html",
